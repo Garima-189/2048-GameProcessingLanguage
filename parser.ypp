@@ -1,0 +1,148 @@
+%{
+    #define YYSTYPE char*
+    #include "header.h"
+    extern int yylex();
+    extern int yyerror(const char* s); 
+%}
+    
+%token ADD SUBTRACT MULTIPLY DIVIDE LEFT RIGHT
+%token UP DOWN ASSIGN TO VAR IS VALUE IN FULLSTOP NEWLINE VARIABLE NUMBER COMMA
+    
+%start Input
+%define parse.error verbose
+%%
+Input: |Input Sentence{
+            cout<<"\n--->";}
+        |error NEWLINE{
+            printf("\n2048>Syntax error.\n--->");
+            fprintf(stderr, "%s","-1\n");
+                        
+        }
+Sentence :  operator direction end {
+                int op = atoi($1);
+                int direction = atoi($2);
+                if(direction >= 0 && direction<=3 && op>= 0 && op<=3){
+                    move(direction, op);
+                    string bState = getBoardState();
+                    int n = bState.length();
+                    char temp[n+1];
+                    strcpy(temp, bState.c_str());
+                    cout<<"2048>";
+                    fprintf(stderr, "%s\n", temp);
+                    printBoard();
+                }
+                else if(direction>=0 && direction<=3){
+                    fprintf(stderr, "%s","-1\n");
+                    printf("\n2048>Please check your operator. \n--->");
+                }
+                else{
+                    fprintf(stderr, "%s","-1\n");
+                    printf("\n2048>Please enter the direction with correct format.\n--->");
+    
+                }
+    
+                
+            }
+            |operator direction NEWLINE {
+                fprintf(stderr, "%s","-1\n");
+                printf("\n2048>You need to end a command with a full-stop.\n");}
+            |VAR VARIABLE IS num COMMA num end{
+                char* name = $2;
+                int row = atoi($4);
+                int col = atoi($6);
+                string s = "";
+                while(name!= $4-4){
+                    s+= name[0];
+                    name++;
+                }               
+                if(row>=1 && row<=4 && col>=1 && col<=4){
+                    if(getTileValue(row, col) == 0){
+                        fprintf(stderr, "%s\n","-1" );
+                        printf("2048>You cannot assign name to an empty tile!\n");
+                    }
+                    else{
+                    assignName(s, row-1, col-1);
+                    string bState = getBoardState();
+                    int n = bState.length();
+                    char temp[n+1];
+                    strcpy(temp, bState.c_str());
+                    cout<<"2048>Thanks, naming done. \n";
+                    fprintf(stderr, "%s\n", temp);
+                    printBoard();
+                    }
+                        
+                }
+                else{
+                    fprintf(stderr, "%s","-1\n");
+                    printf("\n2048>There is no tile like that. The tile co-ordinates must be in the range of 1,2,3,4.\n");
+                }
+            }
+            |VAR VARIABLE IS num COMMA num NEWLINE {
+                fprintf(stderr, "%s","-1\n");
+                printf("\n2048>You need to end a command with a full-stop.\n");}
+            |ASSIGN num TO num COMMA num end{
+            //printf("\n2048>Assigning value to tile\n 1 - %s 2- %d 3 - %s 4- %d 5 - %s 6 - %s 7 - %s\n", $1, atoi($2), $3,atoi($4), $5,$6, $7);
+            int val =atoi($2);
+            int row = atoi($4);
+            int col = atoi($6);
+            if(row>=1 && row<=4 && col>=1 && col<=4){
+                addTileValue(row-1, col-1, val);
+                string bState = getBoardState();
+                int n = bState.length();
+                char temp[n+1];
+                strcpy(temp, bState.c_str());
+                cout<<"2048>";
+                fprintf(stderr, "%s\n", temp);
+                printBoard();
+            }
+            else{
+                fprintf(stderr, "%s","-1\n");
+                printf("\n2048>There is no tile like that. The tile co-ordinates must be in the range of 1,2,3,4.\n");
+            }
+            
+            
+            }
+            |ASSIGN num TO num COMMA num NEWLINE{
+                fprintf(stderr, "%s","-1\n");
+                printf("\n2048>You need to end a command with a full-stop.\n");}
+            |VALUE IN num COMMA num end{
+            
+            
+            if(atoi($3)>=1 && atoi($3)<=4 && atoi($5)>=1 && atoi($5)<=4){
+                cout<<"2048> The tile value is :";
+                cout<<getTileValue(atoi($3), atoi($5))<<"\n";
+                //redirect to stderr with 16 digits followed by the names. 
+            }
+            else{
+                fprintf(stderr, "%s","-1\n");
+                printf("\n2048>There is no tile like that. The tile co-ordinates must be in the range of 1,2,3,4.\n");
+            }
+            }
+            |VALUE IN num COMMA num NEWLINE{
+                fprintf(stderr, "%s","-1\n");
+                printf("\n2048>You need to end a command with a full-stop.\n");}
+            |VARIABLE NEWLINE{
+                fprintf(stderr, "%s","-1\n");
+                printf("\n2048>Sorry, I don't understand that.\n");}
+            
+end : FULLSTOP NEWLINE
+    
+num : NUMBER{$$ = $1;} 
+    
+operator : ADD{$$ = (char*)"3";} 
+            |SUBTRACT {$$ = (char*)"2";} 
+            |MULTIPLY {$$ = (char*)"0";} 
+            |DIVIDE{$$ = (char*)"1";} 
+    
+direction : LEFT {$$ = (char*)"0";} 
+        | RIGHT {$$ = (char*)"1";} 
+        | UP {$$ = (char*)"2";} 
+        | DOWN {$$ = (char*)"3";} 
+    
+%%
+int yyerror(const char* s){
+    printf("2048>%s", s);
+    return 0;
+}
+    
+    
